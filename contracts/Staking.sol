@@ -12,20 +12,61 @@ contract Staking {
   //IERC20 is a interface with all the functions like erc20 but they are empty
   IERC20 public s_stakingToken;
 
+  uint256 public REWARD_RATE = 100;
+  uint256 public s_totalSupply;
+  uint256 public s_rewardPerTokenStored;
+  uint256 public s_lastUpdateTime;
+
   //map address to how much they stake
   mapping(address => uint256) public s_balances;
+  //map address to how much each address has been paid
+  mapping(address => uint256) public s_userRewardPerTokenPaid;
+  //map address to how much reward each address has
+  mapping(address => uint256) public s_rewards;
 
-  uint256 public s_totalSupply;
+  modifier updateReward(address account) {
+    //figure our the reward per token staked
+    s_rewardPerTokenStored = rewardPerToken();
+    s_lastUpdateTime = block.timestamp;
+    s_rewards[account] = earned(account);
+    s_userRewardPerTokenPaid[account] = s_rewardPerTokenStored;
+    _;
+  }
 
   constructor(address stakingToken) {
     s_stakingToken = IERC20(stakingToken);
   }
 
+  function earned(address account) public view returns (uint256) {
+    uint256 currentBalance = s_balances[account];
+    // we need to know how much they have been paid already
+    uint256 amountPaid = s_userRewardPerTokenPaid[account];
+    uint256 currentRewardPerToken = rewardPerToken();
+    uint256 pastRewards = s_rewards[account];
+
+    uint256 earned = ((currentBalance * (currentRewardPerToken - amountPaid)) /
+      1e18);
+    return earned;
+  }
+
+  //rewards are calculated based on how long its been during this
+  //most recent snapshot
+  function rewardPerToken() public view returns (uint256) {
+    if (s_totalSupply == 0) {
+      return s_rewardPerTokenStored;
+    }
+    //everytime we call stake or withdraw, the lastUpdateTime will be updated
+    return
+      s_rewardPerTokenStored +
+      (((block.timestamp - s_lastUpdateTime) * REWARD_RATE * 1e18) /
+        s_totalSupply);
+  }
+
   //here i am onlying 1 specific ERC20 token
-  function stake(uint256 amount) external {
+  function stake(uint256 amount) external updateReward(msg.sender) {
     //here we are keeping track of how much a user has stake
     s_balances[msg.sender] = s_balances[msg.sender] + amount;
-    //how much token we have in total in the contract
+    //how much token we have in total in the contract ( staked )
     s_totalSupply = s_totalSupply + amount;
     //transfer the token to this current staking contract (using transferFrom in IERC20)
     bool success = s_stakingToken.transferFrom(
@@ -40,7 +81,7 @@ contract Staking {
     }
   }
 
-  function withdraw(uint256 amount) external {
+  function withdraw(uint256 amount) external updateReward(msg.sender) {
     s_balances[msg.sender] = s_balances[msg.sender] - amount;
     s_totalSupply = s_totalSupply - amount;
 
@@ -54,7 +95,7 @@ contract Staking {
     }
   }
 
-  function claimReward() external {
+  function claimReward() external updateReward(msg.sender) {
     // contract emit X tokens per seconds and disperse them to all token stakers in ratio
   }
 }
