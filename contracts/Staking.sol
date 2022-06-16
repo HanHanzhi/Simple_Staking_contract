@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 //custom error here which is more gas efficient
 error Staking__TransferFailed();
+error Staking_NeedsMoreThanZero();
 
 contract Staking {
   //stored token is expensive to read and write
@@ -33,6 +34,13 @@ contract Staking {
     s_rewards[account] = earned(account);
     //
     s_userRewardPerTokenPaid[account] = s_rewardPerTokenStored;
+    _;
+  }
+
+  modifier moreThanZero(uint256 amount) {
+    if (amount == 0) {
+      revert Staking_NeedsMoreThanZero();
+    }
     _;
   }
 
@@ -68,7 +76,11 @@ contract Staking {
   }
 
   //here i am onlying 1 specific ERC20 token
-  function stake(uint256 amount) external updateReward(msg.sender) {
+  function stake(uint256 amount)
+    external
+    updateReward(msg.sender)
+    moreThanZero(amount)
+  {
     //here we are keeping track of how much a user has stake
     s_balances[msg.sender] = s_balances[msg.sender] + amount;
     //how much token we have in total in the contract ( staked )
@@ -86,7 +98,11 @@ contract Staking {
     }
   }
 
-  function withdraw(uint256 amount) external updateReward(msg.sender) {
+  function withdraw(uint256 amount)
+    external
+    updateReward(msg.sender)
+    moreThanZero(amount)
+  {
     s_balances[msg.sender] = s_balances[msg.sender] - amount;
     s_totalSupply = s_totalSupply - amount;
 
