@@ -11,6 +11,7 @@ contract Staking {
   //stored token is expensive to read and write
   //IERC20 is a interface with all the functions like erc20 but they are empty
   IERC20 public s_stakingToken;
+  IERC20 public s_rewardsToken;
 
   uint256 public REWARD_RATE = 100;
   uint256 public s_totalSupply;
@@ -21,20 +22,23 @@ contract Staking {
   mapping(address => uint256) public s_balances;
   //map address to how much each address has been paid
   mapping(address => uint256) public s_userRewardPerTokenPaid;
-  //map address to how much reward each address has
+  //map address to how much reward each address has to claim
   mapping(address => uint256) public s_rewards;
 
   modifier updateReward(address account) {
     //figure our the reward per token staked
     s_rewardPerTokenStored = rewardPerToken();
     s_lastUpdateTime = block.timestamp;
+    //update how much reward in total each person has
     s_rewards[account] = earned(account);
+    //
     s_userRewardPerTokenPaid[account] = s_rewardPerTokenStored;
     _;
   }
 
-  constructor(address stakingToken) {
+  constructor(address stakingToken, address rewardsToken) {
     s_stakingToken = IERC20(stakingToken);
+    s_rewardsToken = IERC20(rewardsToken);
   }
 
   function earned(address account) public view returns (uint256) {
@@ -45,7 +49,7 @@ contract Staking {
     uint256 pastRewards = s_rewards[account];
 
     uint256 earned = ((currentBalance * (currentRewardPerToken - amountPaid)) /
-      1e18);
+      1e18) + pastRewards;
     return earned;
   }
 
@@ -56,6 +60,7 @@ contract Staking {
       return s_rewardPerTokenStored;
     }
     //everytime we call stake or withdraw, the lastUpdateTime will be updated
+    //this is added on top of the rewardPerTokenStored previously, so its constantly increasing
     return
       s_rewardPerTokenStored +
       (((block.timestamp - s_lastUpdateTime) * REWARD_RATE * 1e18) /
@@ -97,5 +102,10 @@ contract Staking {
 
   function claimReward() external updateReward(msg.sender) {
     // contract emit X tokens per seconds and disperse them to all token stakers in ratio
+    uint256 reward = s_rewards[msg.sender];
+    bool success = s_rewardsToken.transfer(msg.sender, reward);
+    if (!success) {
+      revert Staking__TransferFailed();
+    }
   }
 }
