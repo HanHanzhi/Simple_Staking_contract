@@ -56,9 +56,9 @@ contract Staking {
     uint256 currentRewardPerToken = rewardPerToken();
     uint256 pastRewards = s_rewards[account];
 
-    uint256 earned = ((currentBalance * (currentRewardPerToken - amountPaid)) /
+    uint256 _earned = ((currentBalance * (currentRewardPerToken - amountPaid)) /
       1e18) + pastRewards;
-    return earned;
+    return _earned;
   }
 
   //rewards are calculated based on how long its been during this
