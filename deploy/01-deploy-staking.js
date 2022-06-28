@@ -30,7 +30,7 @@ main()
     process.exit(1);
   });*/
 
-const { ethers } = require("hardhat");
+/*const { ethers } = require("hardhat");
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
@@ -42,4 +42,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log: true,
   });
 };
-module.exports.tags = ["all", "rewardToken"];
+module.exports.tags = ["all", "staking"];*/

@@ -1,4 +1,4 @@
-/*const { ethers, upgrades } = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 async function main() {
   const [deployer] = await ethers.getSigners();
 
@@ -16,6 +16,15 @@ async function main() {
   await token.deployed();
 
   console.log("Token address:", token.address);
+
+  // make sure to replace the "GoofyGoober" reference with your own ERC-20 name!
+  const Staking = await ethers.getContractFactory("Staking");
+
+  const staking = await Staking.deploy(token.address, token.address);
+
+  await staking.deployed();
+
+  console.log("Stacking address:", staking.address);
 }
 
 main()
@@ -23,9 +32,9 @@ main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  });*/
+  });
 
-module.exports = async ({ getNamedAccounts, deployments }) => {
+/*module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
   const rewardToken = await deploy("RewardToken", {
@@ -34,4 +43,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log: true,
   });
 };
-module.exports.tags = ["all", "rewardToken"];
+module.exports.tags = ["all", "rewardToken"];*/
