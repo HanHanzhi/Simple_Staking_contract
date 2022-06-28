@@ -16,4 +16,7 @@ yarn hardhat run deploy/00-deploy-reward-token.js
 yarn hardhat test
 ```
 
-This site was built by referring to [GitHub Pages](https://github.com/smartcontractkit/hardhat-starter-kit).
+## Reference
+
+[Hardhat start kit](https://github.com/smartcontractkit/hardhat-starter-kit).
+[defi-minimal](https://github.com/smartcontractkit/defi-minimal).
